@@ -61,6 +61,11 @@ def pkt_callback(pkt):
         for pck in Packets:
             PacketsToMaster.append(process_pkt(pck))
         test=json.dumps(PacketsToMaster,default=pktToJson)
+        sock = socket.socket(socket.AF_INET,
+                             socket.SOCK_DGRAM)
+
+        sock.sendto(test.encode(), (UDP_IP,5005))
+        print("sent")
         PacketsToMaster=[]
         Packets=[]
 if __name__ == '__main__':
