@@ -2,6 +2,7 @@ import socket
 from scapy.all import *
 from scapy.layers.inet import IP,Ether
 import uuid
+import json
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
@@ -24,16 +25,17 @@ def main():
     while True:
         capture = sniff(prn=pkt_callback )
 
-
+def pktToJson(pkt):
+    return {"ip":pkt.IP,"port":pkt.PORT}
 def process_pkt(pkt):
     ip=""
     port=""
     try:
-        if(pkt[Ether].src==SLAVEMAC):
+        if(pkt[0].src==SLAVEMAC):
             port=pkt[IP].dport
             ip=pkt[IP].dst
 
-        if (pkt[Ether].dst == SLAVEMAC):
+        if (pkt[0].dst == SLAVEMAC):
             port=pkt[IP].sport
             ip = pkt[IP].src
 
@@ -46,9 +48,9 @@ def process_pkt(pkt):
 def pkt_callback(pkt):
     global Packets
     global PacketsToMaster
-    if (pkt[Ether].src == SLAVEMAC):
+    if (pkt[0].src == SLAVEMAC):
         Packets.append(pkt)
-    elif (pkt[Ether].dst == SLAVEMAC):
+    elif (pkt[0].dst == SLAVEMAC):
         Packets.append(pkt)
     else:
         return
@@ -58,7 +60,7 @@ def pkt_callback(pkt):
         ports=[]
         for pck in Packets:
             PacketsToMaster.append(process_pkt(pck))
-
+        test=json.dumps(PacketsToMaster,default=pktToJson)
         PacketsToMaster=[]
         Packets=[]
 if __name__ == '__main__':
